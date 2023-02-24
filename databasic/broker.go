@@ -3,6 +3,7 @@ package databasic
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 )
 
@@ -31,6 +32,7 @@ const (
 	MAX_RAWNODE_NUMBER   int = 100
 )
 
+/* the following const should be cared by user */
 const (
 	DEFAULT_MONITOR_SIZE   int           = 200
 	DEFAULT_TIMEPEICE      time.Duration = time.Millisecond
@@ -99,7 +101,7 @@ func Router() {
 		// we will add a component that handle this rawnode of failed to push rawnode
 		ok := tasknode.TaskNode_Push(rawnode)
 		if !ok {
-
+			log.Printf("The task of aiming to process the raw data named %s unable to push rawnode!\n\r", rawnode.Id)
 		}
 	}
 

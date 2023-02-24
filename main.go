@@ -1,8 +1,17 @@
 package main
 
 import (
+	"log"
+
 	"github.com/thb-cmyk/aliyum-demo/databasic"
 )
+
+// configure loger for the project
+func logConfig() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
+	log.SetPrefix("[log info:]")
+}
 
 func main() {
 

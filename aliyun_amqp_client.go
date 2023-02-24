@@ -22,7 +22,7 @@ type MessageStructure struct {
 }
 
 /*
-the function is a example, which can connect to the aliyun amqp server and receive data from the server
+The function is used to intialize the amqp client connecting to aliyun amqp sever.
 */
 func Aliyun_Connect() {
 
@@ -38,24 +38,21 @@ func Aliyun_Connect() {
 	/* configure the parameters, which is neccessary to connect to aliyun amqp server */
 	address := "amqps://" + host + ":5671"
 	timestamp := time.Now().Nanosecond() / 1000000
-	//userName组装方法，请参见AMQP客户端接入说明文档。
 	username := fmt.Sprintf("%s|authMode=aksign,signMethod=Hmacsha1,consumerGroupId=%s,authId=%s,iotInstanceId=%s,timestamp=%d|",
 		clientId, consumerGroupId, accessKey, iotInstanceId, timestamp)
 	stringToSign := fmt.Sprintf("authId=%s&timestamp=%d", accessKey, timestamp)
 	hmacKey := hmac.New(sha1.New, []byte(accessSecret))
 	hmacKey.Write([]byte(stringToSign))
-	//计算签名，password组装方法，请参见AMQP客户端接入说明文档。
 	password := base64.StdEncoding.EncodeToString(hmacKey.Sum(nil))
-
-	session_id := amqpbasic.SessionIdentifyInit(address, username, password, "session001")
-	session_test := new(amqpbasic.AmqpSessionHandler)
+	aliyun_session_id := amqpbasic.SessionIdentifyInit(address, username, password, "session001")
+	aliyun_session := new(amqpbasic.AmqpSessionHandler)
 
 	/* create a  root context */
 	root_ctx := context.Background()
 
 	/* create a session. if the bases client is not present, it will creat a client */
 	/* if use the root_ctx, the function never return a timeout error */
-	ok := session_test.SessionInit(session_id, 1, root_ctx)
+	ok := aliyun_session.SessionInit(aliyun_session_id, 1, root_ctx)
 	if ok == -1 {
 		/* if use the root_ctx, the function never return a timeout error */
 		fmt.Printf("The works of creating a new session is failed!\n\r")
@@ -64,7 +61,7 @@ func Aliyun_Connect() {
 	fmt.Printf("The works of creating a new session is successful!\n\r")
 
 	/* create a link based to session_test */
-	ok = session_test.LinkCreate("recv001")
+	ok = aliyun_session.LinkCreate("receiver_voltage")
 	if ok == -1 {
 		fmt.Printf("The works of creating a new link is failed!\n\r")
 		return
@@ -76,11 +73,16 @@ func Aliyun_Connect() {
 
 	/* prehandle the data receiving from amqp server and send the result to databasic */
 	for {
-		// data_PreHandle(session_test, "recv001", 1)
-		dataPreHandle(session_test, "recv001", 1)
+		// prehandle the recevied data and send the result to databasic
+		dataPreHandle(aliyun_session, "receiver_voltage", 1)
+		time.Sleep(500 * time.Millisecond)
 	}
 }
 
+/*
+The function is used to prehandle the data receiving from aliyun amqp server. And creating
+a raw node which contian the prehandled datato send to databasic.
+*/
 func dataPreHandle(session *amqpbasic.AmqpSessionHandler, linkid string, num int) {
 	data, index := session.ReceiverData(linkid, num)
 	if index != 0 {
@@ -98,59 +100,6 @@ func dataPreHandle(session *amqpbasic.AmqpSessionHandler, linkid string, num int
 		}
 	}
 }
-
-/*
-the function prehandle the data received from amqp client and result it can be process by databasic
-*/
-// func data_PreHandle(session *amqpbasic.AmqpSessionHandler, linkid string, num int) {
-
-// 	data, index := session.ReceiverData(linkid, num)
-// 	if index != 0 {
-// 		for i := 0; i < index; i++ {
-// 			fmt.Printf("%s\n\r", data[i])
-// 			var cms MessageStructure
-// 			err := json.Unmarshal(data[i], &cms)
-// 			log.Printf("%v\n\r", cms.Params)
-// 			if err != nil {
-// 				fmt.Print(err.Error())
-// 			} else {
-// 				for k, v := range cms.Params {
-// 					switch k {
-// 					case "check_mode":
-// 						result, err := CheckModeInsert(int(v.(float64)))
-// 						if err != nil {
-// 							fmt.Print(err.Error())
-// 						} else {
-// 							id, _ := result.LastInsertId()
-// 							num, _ := result.RowsAffected()
-// 							fmt.Printf("effected rows: %d, last rows id: %d\n\r", num, id)
-// 						}
-// 					case "voltage":
-// 						result, err := VoltageInsert(v.(float64))
-// 						if err != nil {
-// 							fmt.Print(err.Error())
-// 						} else {
-// 							id, _ := result.LastInsertId()
-// 							num, _ := result.RowsAffected()
-// 							fmt.Printf("effected rows: %d, last rows id: %d\n\r", num, id)
-// 						}
-// 					case "error_info":
-// 						result, err := ErrorInfoInsert(int(v.(float64)))
-// 						if err != nil {
-// 							fmt.Print(err.Error())
-// 						} else {
-// 							id, _ := result.LastInsertId()
-// 							num, _ := result.RowsAffected()
-// 							fmt.Printf("effected rows: %d, last rows id: %d\n\r", num, id)
-// 						}
-// 					default:
-
-// 					}
-// 				}
-// 			}
-// 		}
-// 	}
-// }
 
 /*
 create a processor to handle the received data from aliyun amqp server,we should registry it to databasic
@@ -195,46 +144,3 @@ func dataProccessor(tasknode *databasic.TaskNode, rawnode *databasic.RawNode) bo
 	}
 	return false
 }
-
-// switch id {
-// case "voltage":
-// 	data := rawnode.Raw.(float64)
-// 	result, err := VoltageInsert(data)
-// 	if err != nil {
-// 		fmt.Print(err.Error())
-// 	} else {
-// 		id, _ := result.LastInsertId()
-// 		fmt.Printf("%v\n\r", id)
-// 	}
-
-// case "check_mode":
-// 	data := rawnode.Raw.(int)
-// 	result, err := CheckModeInsert(data)
-// 	if err != nil {
-// 		fmt.Print(err.Error())
-// 	} else {
-// 		id, _ := result.LastInsertId()
-// 		fmt.Printf("%v\n\r", id)
-// 	}
-// case "error_info":
-// 	data := rawnode.Raw.(int)
-// 	result, err := ErrorInfoInsert(data)
-// 	if err != nil {
-// 		fmt.Print(err.Error())
-// 	} else {
-// 		id, _ := result.LastInsertId()
-// 		fmt.Printf("%v\n\r", id)
-// 	}
-// case "LightStatus":
-// 	data := rawnode.Raw.(int)
-// 	result, err := CheckModeInsert(data)
-// 	if err != nil {
-// 		fmt.Print(err.Error())
-// 	} else {
-// 		id, _ := result.LastInsertId()
-// 		fmt.Printf("%v\n\r", id)
-// 	}
-// default:
-
-// }
-// return true

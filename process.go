@@ -12,6 +12,7 @@ import (
 
 var db *sql.DB
 
+// define the statement of inserting and selecting for check_mode, voltage and error_info
 var checkModeInsertStmt *sql.Stmt
 var voltageInsertStmt *sql.Stmt
 var errorInfoInsertStmt *sql.Stmt
@@ -19,6 +20,7 @@ var checkModeSelectStmt *sql.Stmt
 var voltageSelectStmt *sql.Stmt
 var errorInfoSelectStmt *sql.Stmt
 
+// define the structure of check_mode, voltage and error_info
 type VoltageStructure struct {
 	Voltage string `json:"voltage"`
 }
@@ -31,10 +33,12 @@ type ErrorInfoStructure struct {
 	ErrorInfo int `json:"error_info"`
 }
 
+/**
+ * @brief: init the mysql database
+ */
 func MysqlInit() {
 
-	logConfig()
-
+	// get the configuration from config.yaml
 	configMap := utils.GetYamlConfig("config/config.yaml")
 	user := configMap["User"].(string)
 	passwd := configMap["Passwd"].(string)
@@ -53,17 +57,20 @@ func MysqlInit() {
 		AllowNativePasswords: allowNativePasswords,
 	}
 
+	// open connection to the database
 	db, err := sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
 		log.Panicf("Unable to open the database.\n\r error info: %s\n\r", err.Error())
 	}
 
+	// Call DB.Ping to confirm that connecting to the database works.
 	err = db.Ping()
 	if err != nil {
 		log.Panicf("Unable to ping the database server. \n\r error info: %s\n\r", err.Error())
 	}
 	log.Printf("connected!\n\r")
 
+	// intializing the statement of inserting and selecting for check_mode, voltage and error_info
 	checkModeInsertStmt, err = db.Prepare("INSERT INTO check_mode (value) VALUES (?)")
 	if err != nil {
 		log.Panic("Unable to prepare the statement of insert to check_mode.\n\r", err.Error())
@@ -89,11 +96,11 @@ func MysqlInit() {
 		log.Panic("Unable to prepare the statement of select to error_info. \n\r", err.Error())
 	}
 
-	_, err = CheckModeInsert(1)
-	if err != nil {
-		log.Printf("error info: %s\n\r", err.Error())
-	}
 }
+
+/**
+ * @brief: deinit the mysql database
+ */
 
 func MysqlDeInit() {
 	checkModeInsertStmt.Close()
@@ -105,27 +112,41 @@ func MysqlDeInit() {
 	db.Close()
 }
 
-func logConfig() {
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
-
-	log.SetPrefix("[log info:]")
-}
-
+/**
+ * @brief: insert the value to check_mode
+ * @param: value
+ * @return: sql.Result, error
+ */
 func CheckModeInsert(value int) (sql.Result, error) {
 	result, err := checkModeInsertStmt.Exec(value)
 	return result, err
 }
 
+/**
+ * @brief: insert the value to voltage
+ * @param: value
+ * @return: sql.Result, error
+ */
 func VoltageInsert(value string) (sql.Result, error) {
 	result, err := voltageInsertStmt.Exec(value)
 	return result, err
 }
 
+/**
+ * @brief: insert the value to error_info
+ * @param: value
+ * @return: sql.Result, error
+ */
 func ErrorInfoInsert(value int) (sql.Result, error) {
 	result, err := errorInfoInsertStmt.Exec(value)
 	return result, err
 }
 
+/**
+ * @brief: select the value from check_mode
+ * @param: index
+ * @return: []byte
+ */
 func CheckModeSelect(index int) []byte {
 	rows, _ := checkModeSelectStmt.Query(index)
 	defer rows.Close()
@@ -148,6 +169,12 @@ func CheckModeSelect(index int) []byte {
 	}
 	return keyStream
 }
+
+/**
+ * @brief: select the value from voltage
+ * @param: index
+ * @return: []byte
+ */
 func VoltageSelect(index int) []byte {
 	rows, _ := voltageSelectStmt.Query(index)
 	defer rows.Close()
@@ -170,6 +197,12 @@ func VoltageSelect(index int) []byte {
 	}
 	return keyStream
 }
+
+/**
+ * @brief: select the value from error_info
+ * @param: index
+ * @return: []byte
+ */
 func ErrorInfoSelect(index int) []byte {
 	rows, _ := errorInfoSelectStmt.Query(index)
 	defer rows.Close()

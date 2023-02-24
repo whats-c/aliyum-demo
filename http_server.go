@@ -10,6 +10,7 @@ import (
 	"github.com/thb-cmyk/aliyum-demo/databasic"
 )
 
+// define the structure including the http response and request and a waitgroup to synchronize databasic processer node and http sever
 type requestresponse struct {
 	resp http.ResponseWriter
 	requ *http.Request
@@ -23,7 +24,6 @@ func IntrefaceInit() {
 	http.HandleFunc("/voltage", voltageHandler)
 	http.HandleFunc("/check_mode", checkmodeHandler)
 	http.HandleFunc("/error_info", errorinfoHandler)
-	fmt.Printf("http server is running\n\r")
 
 	http.ListenAndServe(":8080", nil)
 }

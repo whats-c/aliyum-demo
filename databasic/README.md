@@ -1,9 +1,20 @@
+# data.go
+The data.go include two structure types dataclass and datanode. The relation between dataclass and datanode is that datanode is mounted to dataclass. And the dataclass instance is mounted to procecce node to record the handled data by the process node. But the dataclass and datanode types is not used by the project.
 
-### 2.垃圾回收
-	当一个结构体变量a的一个指针成员指向另外一个结构体变量b并且另外一个结构体变量b的一个指针成员指向结构体a时，会回收吗？
+# monitor.go
+The monitor.go include one types Monitor. But it's function is missed.
 
-## 3.debug信息
-	当代码运行时，产生错误的情况有两种：
-	{
+# list.go
+The list.go includes one types listnode. It is used by other types included in project. For example procenode, dataclass, datanode etc. It's function is to listing all the instances that have the eaqual type.
 
-	}
+# raw.go
+The raw.go include one types rawnode. It is the basic element to handle the received data from other components. It includes the raw data will be handled.
+While the other components hope to handle data by the process node, it should create the rawnode to containe the raw data.
+
+# process.go
+The process.go include one types procenode. It's core is operation element, which can handle the received data. 
+
+# broker.go
+The broker.go implements the broker functions. It consist of router, scheduler, and
+controler components. The router receive data required to handle by the databasic, which form is rawnode. The scheduler schedule the registered task to handle data.
+Now, the controler is not implemented.

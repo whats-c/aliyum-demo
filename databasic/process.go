@@ -48,17 +48,6 @@ func ProceNode_register(operation interface{}, id string) *ProceNode {
 	return procenode
 }
 
-func (pn *ProceNode) ProceNode_unregister(ctx context.Context) bool {
-
-	ok := ListNode_delete(pn.List)
-	if !ok {
-		return false
-	}
-	global_procenode_num--
-
-	return true
-}
-
 func ProceNode_find(id string) (procenode *ProceNode) {
 	listnode := global_procenode_entry
 
@@ -80,6 +69,17 @@ func ProceNode_find(id string) (procenode *ProceNode) {
 		}
 	}
 	return nil
+}
+
+func (pn *ProceNode) ProceNode_unregister(ctx context.Context) bool {
+
+	ok := ListNode_delete(pn.List)
+	if !ok {
+		return false
+	}
+	global_procenode_num--
+
+	return true
 }
 
 func (pn *ProceNode) ProceNode_update_method(operation interface{}) bool {
