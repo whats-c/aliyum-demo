@@ -106,8 +106,9 @@ func voltageProccesser(tasknode *databasic.TaskNode, rawnode *databasic.RawNode)
 	if err != nil {
 		fmt.Print(err.Error())
 	}
+	deviceName := reader.FormValue("device_name")
 
-	result := VoltageSelect(index)
+	result := Select(deviceName, "voltage", index)
 
 	fmt.Printf("len: %d, content: %s\n\r", len(result), result)
 
@@ -138,8 +139,9 @@ func checkmodeProccesser(tasknode *databasic.TaskNode, rawnode *databasic.RawNod
 	if err != nil {
 		fmt.Print(err.Error())
 	}
+	deviceName := reader.FormValue("device_name")
 
-	result := CheckModeSelect(index)
+	result := Select(deviceName, "check_mode", index)
 	fmt.Printf("len: %d, content: %s\n\r", len(result), result)
 
 	writer.Write(result)
@@ -169,8 +171,9 @@ func errorinfoProccesser(tasknode *databasic.TaskNode, rawnode *databasic.RawNod
 	if err != nil {
 		fmt.Print(err.Error())
 	}
+	deviceName := reader.FormValue("device_name")
 
-	result := ErrorInfoSelect(index)
+	result := Select(deviceName, "error_info", index)
 
 	fmt.Printf("len: %d, content: %s\n\r", len(result), result)
 

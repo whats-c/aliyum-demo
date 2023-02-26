@@ -385,6 +385,27 @@ func (as *AmqpSessionHandler) ReceiverData(linkid string, num int) ([][]byte, in
 	return buf, num
 }
 
+func (as *AmqpSessionHandler) ReceiverMessage(linkid string, num int) ([]*amqp.Message, int) {
+	/* The funcion move the message from the link.buf to the message */
+	index := as.SessionFindLinkIndex(linkid)
+	Receiver := as.links[index]
+	if Receiver == nil {
+		fmt.Printf("The link is not found named on %s!\n\r", linkid)
+		return nil, -1
+	}
+	message := make([]*amqp.Message, 0)
+	for i := 0; i < num; i++ {
+		message_temp, ok_temp := link_message_read(Receiver)
+		if ok_temp == -1 {
+			return message, i
+		}
+
+		message = append(message, message_temp)
+	}
+
+	return message, num
+}
+
 func ReceiveThread(ctx context.Context) {
 	var sindex, lindex int = 0, 0
 
