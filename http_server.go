@@ -24,6 +24,7 @@ func IntrefaceInit() {
 	http.HandleFunc("/voltage", voltageHandler)
 	http.HandleFunc("/check_mode", checkmodeHandler)
 	http.HandleFunc("/error_info", errorinfoHandler)
+	http.HandleFunc("/status", statusHandler)
 
 	http.ListenAndServe(":8080", nil)
 }
@@ -77,6 +78,20 @@ func errorinfoHandler(writer http.ResponseWriter, reader *http.Request) {
 	rr := requestresponse{writer, reader, &wg}
 
 	rawnode := databasic.RawNode_create("error_info", &rr)
+
+	databasic.Send_raw(rawnode)
+
+	wg.Wait()
+}
+
+func statusHandler(writer http.ResponseWriter, reader *http.Request) {
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+
+	rr := requestresponse{writer, reader, &wg}
+
+	rawnode := databasic.RawNode_create("status", &rr)
 
 	databasic.Send_raw(rawnode)
 
@@ -174,6 +189,36 @@ func errorinfoProccesser(tasknode *databasic.TaskNode, rawnode *databasic.RawNod
 	deviceName := reader.FormValue("device_name")
 
 	result := Select(deviceName, "error_info", index)
+
+	fmt.Printf("len: %d, content: %s\n\r", len(result), result)
+
+	writer.Write(result)
+
+	rr.wg.Done()
+
+	return true
+}
+
+func statusProccesser(tasknode *databasic.TaskNode, rawnode *databasic.RawNode) bool {
+	rr := rawnode.Raw.(*requestresponse)
+
+	writer := rr.resp
+
+	reader := rr.requ
+
+	var index int
+
+	err := reader.ParseForm()
+	if err != nil {
+		index = 1
+	}
+	index, err = strconv.Atoi(reader.FormValue("index"))
+	if err != nil {
+		fmt.Print(err.Error())
+	}
+	deviceName := reader.FormValue("device_name")
+
+	result := Select(deviceName, "status", index)
 
 	fmt.Printf("len: %d, content: %s\n\r", len(result), result)
 

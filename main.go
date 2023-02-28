@@ -15,13 +15,11 @@ func logConfig() {
 
 func main() {
 
+	logConfig()
+
 	databasic.All_Init()
 
 	databasic.Broker()
-
-	// databasic.ProceNode_register(dataProccessor, "voltage")
-	// databasic.ProceNode_register(dataProccessor, "check_mode")
-	// databasic.ProceNode_register(dataProccessor, "error_info")
 
 	databasic.ProceNode_register(dataProccessor, "aliyun")
 
@@ -35,6 +33,7 @@ func main() {
 	databasic.ProceNode_register(voltageProccesser, "voltage")
 	databasic.ProceNode_register(checkmodeProccesser, "check_mode")
 	databasic.ProceNode_register(errorinfoProccesser, "error_info")
+	databasic.ProceNode_register(statusProccesser, "status")
 
 	IntrefaceInit()
 
